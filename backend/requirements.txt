@@ -5,7 +5,7 @@ pydantic[email]>=2.8.0
 pydantic-settings>=2.4.0
 
 # Database
-supabase>=2.0.2
+supabase==2.4.1
 psycopg2-binary>=2.9.9
 sqlalchemy>=2.0.0
 
