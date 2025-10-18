@@ -131,8 +131,6 @@ class SimpleAIProcessor:
                 'ai_tags': ai_result.tags,
                 'ai_description': ai_result.description,
                 'dominant_colors': ai_result.dominant_colors,
-                'ai_processed_at': datetime.now().isoformat(),
-                'ai_processing_time': ai_result.processing_time,
                 'updated_at': datetime.now().isoformat()
             }).eq('id', image_id).execute()
         except Exception as e:
@@ -144,10 +142,10 @@ class SimpleAIProcessor:
             supabase = get_supabase_client()
             supabase.table('images').update({
                 'processing_status': ProcessingStatus.FAILED.value,
-                'error_message': error_message,
-                'ai_processed_at': datetime.now().isoformat(),
                 'updated_at': datetime.now().isoformat()
             }).eq('id', image_id).execute()
+            # Log the error message since we can't store it in the database
+            logger.error(f"AI processing failed for image {image_id}: {error_message}")
         except Exception as e:
             logger.error(f"Failed to update image with error: {e}")
     

@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ImageUpload } from '../components/ImageUpload';
 import { ImageGallery } from '../components/ImageGallery';
+import { SearchableImageGallery } from '../components/SearchableImageGallery';
 import { ImageModal } from '../components/ImageModal';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { ProcessingStatus } from '../components/ProcessingStatus';
@@ -15,7 +16,7 @@ export const DashboardPage: React.FC = () => {
   const { user, loading } = useAuth();
   const [selectedImage, setSelectedImage] = useState<ImageMetadata | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'gallery' | 'ai-tools'>('gallery');
+  const [activeTab, setActiveTab] = useState<'upload' | 'gallery' | 'search' | 'ai-tools'>('gallery');
 
   if (loading) {
     return (
@@ -101,6 +102,16 @@ export const DashboardPage: React.FC = () => {
               Upload
             </button>
             <button
+              onClick={() => setActiveTab('search')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'search'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Search
+            </button>
+            <button
               onClick={() => setActiveTab('ai-tools')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'ai-tools'
@@ -124,6 +135,13 @@ export const DashboardPage: React.FC = () => {
         ) : activeTab === 'upload' ? (
           <div>
             <ImageUpload onUploadComplete={handleUploadComplete} />
+          </div>
+        ) : activeTab === 'search' ? (
+          <div>
+            <SearchableImageGallery
+              onImageSelect={handleImageSelect}
+              onUploadClick={() => setActiveTab('upload')}
+            />
           </div>
         ) : (
           <div className="space-y-6">
@@ -182,10 +200,10 @@ export const DashboardPage: React.FC = () => {
           
           <div className="bg-purple-50 p-6 rounded-lg">
             <h3 className="text-lg font-semibold text-purple-900 mb-2">
-              Smart Organization
+              Smart Search & Organization
             </h3>
             <p className="text-purple-800 text-sm">
-              Easily search and filter your images by AI-generated tags and descriptions.
+              Search by tags, descriptions, colors, and find similar images with AI-powered analysis.
             </p>
           </div>
         </div>

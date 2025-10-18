@@ -7,28 +7,24 @@ I've implemented comprehensive rate limiting for Azure Computer Vision to ensure
 ## 📊 **Free Tier Limits**
 
 **Azure Computer Vision Free Tier:**
-- ✅ **10,000 predictions per month**
+- ✅ **5,000 predictions per month**
+- ✅ **20 transactions per minute**
 - ✅ **5,000 training images free per project**
 
 ## 🛡️ **Conservative Rate Limiting Implementation**
 
 ### **Monthly Limits**
-- **Limit**: 8,000 requests per month (80% of free tier)
-- **Purpose**: Prevents exceeding the 10,000 monthly limit
+- **Limit**: 4,000 requests per month (80% of free tier)
+- **Purpose**: Prevents exceeding the 5,000 monthly limit
 - **Action**: Throws error if limit reached
 
 ### **Daily Limits**
-- **Limit**: 300 requests per day (~10,000/30 days with buffer)
+- **Limit**: 150 requests per day (~5,000/30 days with buffer)
 - **Purpose**: Distributes monthly usage evenly
 - **Action**: Throws error if limit reached
 
-### **Hourly Limits**
-- **Limit**: 15 requests per hour
-- **Purpose**: Prevents burst usage
-- **Action**: Waits until next hour if limit reached
-
 ### **Minute/Second Limits**
-- **Minute Limit**: 1 request per minute
+- **Minute Limit**: 20 requests per minute (Azure free tier limit)
 - **Second Limit**: 1 request per second
 - **Purpose**: Prevents rapid-fire requests
 - **Action**: Waits until limit resets

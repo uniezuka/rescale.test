@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -8,7 +8,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   showValidation?: boolean;
 }
 
-export const Input: React.FC<InputProps> = ({
+export const Input = forwardRef<HTMLInputElement, InputProps>(({
   label,
   error,
   helperText,
@@ -18,7 +18,7 @@ export const Input: React.FC<InputProps> = ({
   value,
   onChange,
   ...props
-}) => {
+}, ref) => {
   const [internalValue, setInternalValue] = useState(value || '');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
@@ -58,6 +58,7 @@ export const Input: React.FC<InputProps> = ({
       )}
       <div className="relative">
         <input
+          ref={ref}
           className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
             displayError 
               ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
@@ -95,4 +96,4 @@ export const Input: React.FC<InputProps> = ({
       )}
     </div>
   );
-};
+});

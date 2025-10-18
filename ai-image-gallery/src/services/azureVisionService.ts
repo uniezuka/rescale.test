@@ -15,19 +15,17 @@ export class AzureVisionService {
   private static readonly API_KEY = import.meta.env.VITE_AZURE_CV_KEY;
   
   // Free tier rate limiting configuration
-  // Azure Computer Vision Free Tier: 10,000 predictions per month
+  // Azure Computer Vision Free Tier: 5,000 predictions per month, 20 per minute
   // Conservative limits to stay well within free tier
-  private static readonly MAX_REQUESTS_PER_MONTH = 8000; // 80% of free tier limit
-  private static readonly MAX_REQUESTS_PER_DAY = 300; // ~10,000/30 days with buffer
-  private static readonly MAX_REQUESTS_PER_HOUR = 15; // Conservative hourly limit
-  private static readonly MAX_REQUESTS_PER_MINUTE = 1; // Very conservative minute limit
+  private static readonly MAX_REQUESTS_PER_MONTH = 4000; // 80% of free tier limit
+  private static readonly MAX_REQUESTS_PER_DAY = 150; // ~5,000/30 days with buffer
+  private static readonly MAX_REQUESTS_PER_MINUTE = 20; // Azure free tier minute limit
   private static readonly MAX_REQUESTS_PER_SECOND = 1; // One request per second max
   
   // Usage tracking
   private static requestCounts = new Map<string, number[]>();
   private static monthlyUsage = 0;
   private static dailyUsage = 0;
-  private static hourlyUsage = 0;
   
   // Usage tracking keys
   private static readonly MINUTE_KEY = 'minute';
@@ -220,12 +218,6 @@ export class AzureVisionService {
       });
     }
     
-    // Check hourly limit
-    if (this.hourlyUsage >= this.MAX_REQUESTS_PER_HOUR) {
-      const waitTime = 3600000 - (now % 3600000); // Wait until next hour
-      await this.sleep(waitTime);
-    }
-    
     // Clean old entries
     this.cleanOldEntries(now);
     
@@ -256,7 +248,6 @@ export class AzureVisionService {
     // Update usage counters
     this.monthlyUsage++;
     this.dailyUsage++;
-    this.hourlyUsage++;
     
     // Save usage to localStorage
     this.saveUsageTracking();
@@ -300,18 +291,15 @@ export class AzureVisionService {
         // Reset daily usage if it's a new day
         if (daysSinceReset >= 1) {
           this.dailyUsage = 0;
-          this.hourlyUsage = 0;
         }
         
         // Reset monthly usage if it's a new month
         if (monthsSinceReset >= 1) {
           this.monthlyUsage = 0;
           this.dailyUsage = 0;
-          this.hourlyUsage = 0;
         } else {
           this.monthlyUsage = usage.monthly || 0;
           this.dailyUsage = usage.daily || 0;
-          this.hourlyUsage = usage.hourly || 0;
         }
       }
     } catch (error) {
@@ -319,7 +307,6 @@ export class AzureVisionService {
       // Reset counters if loading fails
       this.monthlyUsage = 0;
       this.dailyUsage = 0;
-      this.hourlyUsage = 0;
     }
   }
 
@@ -331,7 +318,6 @@ export class AzureVisionService {
       const usage = {
         monthly: this.monthlyUsage,
         daily: this.dailyUsage,
-        hourly: this.hourlyUsage,
         lastReset: Date.now()
       };
       localStorage.setItem('azure-vision-usage', JSON.stringify(usage));
@@ -346,7 +332,6 @@ export class AzureVisionService {
   static getUsageStats(): {
     monthly: { used: number; limit: number; remaining: number };
     daily: { used: number; limit: number; remaining: number };
-    hourly: { used: number; limit: number; remaining: number };
   } {
     this.initializeUsageTracking();
     
@@ -360,11 +345,6 @@ export class AzureVisionService {
         used: this.dailyUsage,
         limit: this.MAX_REQUESTS_PER_DAY,
         remaining: Math.max(0, this.MAX_REQUESTS_PER_DAY - this.dailyUsage)
-      },
-      hourly: {
-        used: this.hourlyUsage,
-        limit: this.MAX_REQUESTS_PER_HOUR,
-        remaining: Math.max(0, this.MAX_REQUESTS_PER_HOUR - this.hourlyUsage)
       }
     };
   }
@@ -376,7 +356,6 @@ export class AzureVisionService {
     this.initializeUsageTracking();
     this.monthlyUsage++;
     this.dailyUsage++;
-    this.hourlyUsage++;
     this.saveUsageTracking();
   }
 
@@ -386,8 +365,7 @@ export class AzureVisionService {
   static canMakeRequest(): boolean {
     this.initializeUsageTracking();
     return this.monthlyUsage < this.MAX_REQUESTS_PER_MONTH &&
-           this.dailyUsage < this.MAX_REQUESTS_PER_DAY &&
-           this.hourlyUsage < this.MAX_REQUESTS_PER_HOUR;
+           this.dailyUsage < this.MAX_REQUESTS_PER_DAY;
   }
 
   /**
@@ -396,7 +374,6 @@ export class AzureVisionService {
   static resetUsageCounters(): void {
     this.monthlyUsage = 0;
     this.dailyUsage = 0;
-    this.hourlyUsage = 0;
     this.requestCounts.clear();
     this.saveUsageTracking();
   }

@@ -42,9 +42,10 @@ class Settings(BaseSettings):
     # AI Processing Configuration
     ai_processing_timeout: int = 300  # 5 minutes
     
-    # Rate Limiting
-    rate_limit_per_minute: int = 60
-    rate_limit_per_hour: int = 1000
+    # Rate Limiting (Azure Computer Vision Free Tier)
+    rate_limit_per_minute: int = 20
+    rate_limit_per_day: int = 150
+    rate_limit_per_month: int = 4000
     
     # Logging
     log_level: str = "INFO"

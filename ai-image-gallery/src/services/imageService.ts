@@ -176,7 +176,7 @@ export class ImageService {
       query = query.or(`filename.ilike.%${filters.search}%,ai_description.ilike.%${filters.search}%`);
     }
 
-    if (filters?.tags?.length > 0) {
+    if (filters?.tags && filters.tags.length > 0) {
       query = query.contains('ai_tags', filters.tags);
     }
 

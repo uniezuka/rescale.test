@@ -41,4 +41,7 @@ export interface SearchResult {
   total: number;
   page: number;
   limit: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+  searchTime?: number;
 }

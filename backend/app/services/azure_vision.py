@@ -4,6 +4,8 @@ Azure Computer Vision service for image analysis
 
 import httpx
 import logging
+import asyncio
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 from app.config import settings
 from app.models.image import AIProcessingResult
@@ -19,6 +21,49 @@ class AzureVisionService:
         self.api_key = settings.azure_vision_key
         self.base_url = f"{self.endpoint}/vision/v3.2"
         
+        # Rate limiting configuration
+        # Azure Computer Vision Free Tier: 5,000 predictions per month, 20 per minute
+        self.MAX_REQUESTS_PER_MONTH = 4000  # 80% of free tier limit
+        self.MAX_REQUESTS_PER_DAY = 150     # ~5,000/30 days with buffer
+        self.MAX_REQUESTS_PER_MINUTE = 20   # Azure free tier minute limit
+        
+        # Usage tracking
+        self.request_times = []
+        self.monthly_usage = 0
+        self.daily_usage = 0
+        
+    async def _check_rate_limit(self) -> None:
+        """Check and enforce rate limits to stay within free tier"""
+        now = datetime.now()
+        
+        # Clean old request times
+        self.request_times = [
+            req_time for req_time in self.request_times 
+            if now - req_time < timedelta(hours=1)
+        ]
+        
+        # Check monthly limit (most restrictive)
+        if self.monthly_usage >= self.MAX_REQUESTS_PER_MONTH:
+            raise Exception(f"Monthly free tier limit reached ({self.MAX_REQUESTS_PER_MONTH} requests). Please wait until next month or upgrade to a paid plan.")
+        
+        # Check daily limit
+        if self.daily_usage >= self.MAX_REQUESTS_PER_DAY:
+            raise Exception(f"Daily limit reached ({self.MAX_REQUESTS_PER_DAY} requests). Please try again tomorrow.")
+        
+        # Check minute limit
+        minute_requests = len([t for t in self.request_times if now - t < timedelta(minutes=1)])
+        if minute_requests >= self.MAX_REQUESTS_PER_MINUTE:
+            # Wait until oldest request is more than a minute old
+            oldest_request = min(self.request_times)
+            wait_time = (oldest_request + timedelta(minutes=1) - now).total_seconds()
+            if wait_time > 0:
+                await asyncio.sleep(wait_time)
+        
+        # Record this request
+        self.request_times.append(now)
+        self.monthly_usage += 1
+        self.daily_usage += 1
+        
     async def analyze_image(self, image_url: str) -> AIProcessingResult:
         """
         Analyze image using Azure Computer Vision API
@@ -32,6 +77,9 @@ class AzureVisionService:
         Raises:
             HTTPException: If API call fails
         """
+        # Check rate limits before making API call
+        await self._check_rate_limit()
+        
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
@@ -71,6 +119,9 @@ class AzureVisionService:
         Returns:
             AIProcessingResult with analysis data
         """
+        # Check rate limits before making API call
+        await self._check_rate_limit()
+        
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
