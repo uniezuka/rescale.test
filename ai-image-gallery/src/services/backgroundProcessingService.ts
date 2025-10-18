@@ -25,8 +25,6 @@ export interface ProcessingResult {
 }
 
 export class BackgroundProcessingService {
-  private static readonly MAX_RETRY_ATTEMPTS = 3;
-  private static readonly RETRY_DELAY_MS = 5000;
   private static readonly BATCH_SIZE = 10;
   
   /**
@@ -130,7 +128,7 @@ export class BackgroundProcessingService {
 
       // Process using FastAPI backend
       console.log('Processing image via FastAPI backend:', imageId);
-      return await this.processImageViaFastAPI(imageId, imageUrl);
+      return await this.processImageViaFastAPI(imageId);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown processing error';
@@ -141,7 +139,7 @@ export class BackgroundProcessingService {
   /**
    * Process image using FastAPI backend
    */
-  private static async processImageViaFastAPI(imageId: string, imageUrl: string): Promise<ProcessingResult> {
+  private static async processImageViaFastAPI(imageId: string): Promise<ProcessingResult> {
     try {
       console.log('Processing image via FastAPI backend:', imageId);
       
@@ -232,7 +230,7 @@ export class BackgroundProcessingService {
       const batchPromises = batch.map(imageId => this.processImage(imageId));
       const batchResults = await Promise.allSettled(batchPromises);
       
-      batchResults.forEach((result, index) => {
+      batchResults.forEach((result) => {
         if (result.status === 'fulfilled') {
           results.push(result.value);
         } else {

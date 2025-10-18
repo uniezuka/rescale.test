@@ -22,7 +22,7 @@ export const DashboardPage: React.FC = () => {
     );
   }
 
-  const handleUploadComplete = (images: ImageMetadata[]) => {
+  const handleUploadComplete = () => {
     setActiveTab('gallery');
   };
 

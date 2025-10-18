@@ -366,6 +366,32 @@ export class RealTimeService {
   }
 
   /**
+   * Test connection to Supabase real-time
+   */
+  static async testConnection(): Promise<boolean> {
+    try {
+      // Test basic Supabase connection
+      const { error } = await supabase.from('images').select('count').limit(1);
+      return !error;
+    } catch (error) {
+      console.error('Real-time connection test failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get connection status
+   */
+  static getConnectionStatus(): 'connected' | 'disconnected' | 'unknown' {
+    try {
+      // Simple check - if we have active subscriptions, consider connected
+      return this.subscriptions.size > 0 ? 'connected' : 'disconnected';
+    } catch (error) {
+      return 'unknown';
+    }
+  }
+
+  /**
    * Clear all subscriptions (for testing)
    */
   static clearAllSubscriptions(): void {

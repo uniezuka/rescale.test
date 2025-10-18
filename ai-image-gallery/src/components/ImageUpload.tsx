@@ -24,7 +24,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const [error, setError] = useState<string | null>(null);
   const { addToast } = useToast();
-  const { handleError, handleAsyncError } = useErrorHandler();
+  const { handleError } = useErrorHandler();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;

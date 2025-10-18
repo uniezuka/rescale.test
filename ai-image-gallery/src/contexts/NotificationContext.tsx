@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { RealTimeService, type ProcessingUpdate } from '../services/realTimeService';
 import { useAuth } from '../hooks/useAuth';
 

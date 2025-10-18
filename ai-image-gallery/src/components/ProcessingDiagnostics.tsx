@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BackgroundProcessingService } from '../services/backgroundProcessingService';
 import { AzureVisionService } from '../services/azureVisionService';
 import { supabase } from '../services/supabase';
@@ -118,7 +118,7 @@ export const ProcessingDiagnostics: React.FC<ProcessingDiagnosticsProps> = ({ cl
       setDiagnostics([...results]);
 
       try {
-        const { data, error } = await supabase.from('images').select('count').limit(1);
+        const { error } = await supabase.from('images').select('count').limit(1);
         if (error) {
           results[results.length - 1] = {
             test: 'Supabase Connection',

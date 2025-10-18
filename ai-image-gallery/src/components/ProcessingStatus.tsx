@@ -6,7 +6,7 @@ interface ProcessingStatusProps {
 }
 
 export const ProcessingStatus: React.FC<ProcessingStatusProps> = ({ className = '' }) => {
-  const { stats, isLoading, error, retryProcessing, processPendingImages, refreshStats } = useAIProcessing();
+  const { stats, isLoading, error, processPendingImages, refreshStats } = useAIProcessing();
 
   const handleTestConnection = async () => {
     try {

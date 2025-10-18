@@ -332,6 +332,7 @@ export class AzureVisionService {
   static getUsageStats(): {
     monthly: { used: number; limit: number; remaining: number };
     daily: { used: number; limit: number; remaining: number };
+    hourly: { used: number; limit: number; remaining: number };
   } {
     this.initializeUsageTracking();
     
@@ -345,6 +346,11 @@ export class AzureVisionService {
         used: this.dailyUsage,
         limit: this.MAX_REQUESTS_PER_DAY,
         remaining: Math.max(0, this.MAX_REQUESTS_PER_DAY - this.dailyUsage)
+      },
+      hourly: {
+        used: 0, // Not implemented yet
+        limit: this.MAX_REQUESTS_PER_MINUTE * 60, // Convert minute limit to hourly
+        remaining: this.MAX_REQUESTS_PER_MINUTE * 60
       }
     };
   }
