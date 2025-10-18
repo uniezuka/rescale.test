@@ -5,14 +5,14 @@ pydantic[email]>=2.8.0
 pydantic-settings>=2.4.0
 
 # Database
-supabase==2.0.2
+supabase>=2.0.2
 psycopg2-binary>=2.9.9
 
 # Background Processing (Simple async)
 # asyncio is built into Python 3.7+, no need to install
 
 # HTTP Client
-httpx>=0.25.0
+httpx==0.24.1
 aiofiles==23.2.1
 
 # Image Processing
