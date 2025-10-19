@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { ImageService } from '../services/imageService';
+import { FastApiImageService } from '../services/fastApiImageService';
 import type { UploadProgress } from '../types/image';
 import { Button } from './Button';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -42,7 +42,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     onUploadProgress?.(progressArray);
 
     try {
-      const results = await ImageService.uploadMultipleImages(
+      const results = await FastApiImageService.uploadMultipleImages(
         acceptedFiles,
         {},
         (progress) => {

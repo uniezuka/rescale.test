@@ -21,7 +21,7 @@ interface SimilarImage {
   description_similarity: number;
   ai_tags: string[];
   ai_description: string;
-  created_at: string;
+  uploaded_at: string;
 }
 
 export const SimilarImageSearch: React.FC<SimilarImageSearchProps> = ({
@@ -76,8 +76,8 @@ export const SimilarImageSearch: React.FC<SimilarImageSearchProps> = ({
       mime_type: 'image/jpeg', // Default assumption
       width: 0, // Not available
       height: 0, // Not available
-      uploaded_at: similarImage.created_at,
-      updated_at: similarImage.created_at,
+      uploaded_at: similarImage.uploaded_at,
+      updated_at: similarImage.uploaded_at,
       processing_status: 'completed',
       ai_tags: similarImage.ai_tags,
       ai_description: similarImage.ai_description,
@@ -254,8 +254,8 @@ export const SimilarImageSearch: React.FC<SimilarImageSearchProps> = ({
                       mime_type: 'image/jpeg',
                       width: 0,
                       height: 0,
-                      uploaded_at: image.created_at,
-                      updated_at: image.created_at,
+                      uploaded_at: image.uploaded_at,
+                      updated_at: image.uploaded_at,
                       processing_status: 'completed',
                       ai_tags: image.ai_tags,
                       ai_description: image.ai_description,

@@ -6,6 +6,7 @@ import io
 from PIL import Image
 import logging
 from typing import Tuple, Optional
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 

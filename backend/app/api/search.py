@@ -29,7 +29,7 @@ async def search_images(
     tags: Optional[str] = Query(None, description="Comma-separated tags"),
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
-    sort_by: str = Query("created_at", description="Sort field"),
+    sort_by: str = Query("uploaded_at", description="Sort field"),
     sort_order: str = Query("desc", description="Sort order (asc/desc)"),
     current_user: UserResponse = Depends(get_current_user)
 ):
@@ -118,7 +118,7 @@ async def search_images(
                 "ai_description": image.get('ai_description'),
                 "dominant_colors": image.get('dominant_colors', []),
                 "processing_status": image['processing_status'],
-                "created_at": image['created_at'],
+                "uploaded_at": image['uploaded_at'],
                 "updated_at": image['updated_at']
             })
         
@@ -234,7 +234,7 @@ async def find_similar_images(
                     "description_similarity": round(desc_similarity, 3),
                     "ai_tags": image.get('ai_tags', []),
                     "ai_description": image.get('ai_description'),
-                    "created_at": image['created_at']
+                    "uploaded_at": image['uploaded_at']
                 })
         
         # Sort by similarity score and limit results

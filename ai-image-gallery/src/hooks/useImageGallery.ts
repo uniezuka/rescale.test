@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ImageService } from '../services/imageService';
+import { FastApiImageService } from '../services/fastApiImageService';
 import { RealTimeService, type ProcessingUpdate } from '../services/realTimeService';
 import type { ImageMetadata, PaginationInfo } from '../types/image';
 import { useErrorHandler } from './useErrorHandler';
@@ -69,7 +69,7 @@ export const useImageGallery = (
       setError(null);
 
       // Use the current pageSize from options instead of pagination.limit
-      const result = await ImageService.getUserImages(page, pageSize);
+      const result = await FastApiImageService.getUserImages(page, pageSize);
       
       if (append) {
         setImages(prev => [...prev, ...result.images]);
@@ -115,7 +115,7 @@ export const useImageGallery = (
   const deleteImage = useCallback(async (imageId: string): Promise<void> => {
     await handleAsyncError(
       async () => {
-        await ImageService.deleteImage(imageId);
+        await FastApiImageService.deleteImage(imageId);
         setImages(prev => prev.filter(img => img.id !== imageId));
         setPagination(prev => ({
           ...prev,
@@ -192,7 +192,7 @@ export const useImageGallery = (
         try {
           // Check each processing image for updates
           for (const image of processingImages) {
-            const updatedImage = await ImageService.getImageById(image.id);
+            const updatedImage = await FastApiImageService.getImageById(image.id);
             if (updatedImage && updatedImage.processing_status !== image.processing_status) {
               // Update the image in state
               setImages(prevImages => {

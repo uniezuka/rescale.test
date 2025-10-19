@@ -49,8 +49,9 @@ class StorageService:
                 file_options={"content-type": "image/jpeg"}
             )
             
-            if result.get("error"):
-                raise Exception(f"Storage upload error: {result['error']}")
+            # Check if upload was successful
+            if hasattr(result, 'error') and result.error:
+                raise Exception(f"Storage upload error: {result.error}")
             
             # Since storage is now private, we'll use API-based serving
             # Return a placeholder URL that will be handled by the API
@@ -88,8 +89,9 @@ class StorageService:
                 file_options={"content-type": "image/jpeg"}
             )
             
-            if result.get("error"):
-                raise Exception(f"Thumbnail upload error: {result['error']}")
+            # Check if upload was successful
+            if hasattr(result, 'error') and result.error:
+                raise Exception(f"Thumbnail upload error: {result.error}")
             
             # Since storage is now private, we'll use API-based serving
             # Return a placeholder URL that will be handled by the API
@@ -115,8 +117,9 @@ class StorageService:
         try:
             result = self.supabase.storage.from_(self.images_bucket).remove([storage_path])
             
-            if result.get("error"):
-                logger.error(f"Image deletion error: {result['error']}")
+            # Check if deletion was successful
+            if hasattr(result, 'error') and result.error:
+                logger.error(f"Image deletion error: {result.error}")
                 return False
             
             logger.info(f"Image deleted successfully: {storage_path}")
@@ -139,8 +142,9 @@ class StorageService:
         try:
             result = self.supabase.storage.from_(self.thumbnails_bucket).remove([thumbnail_path])
             
-            if result.get("error"):
-                logger.error(f"Thumbnail deletion error: {result['error']}")
+            # Check if deletion was successful
+            if hasattr(result, 'error') and result.error:
+                logger.error(f"Thumbnail deletion error: {result.error}")
                 return False
             
             logger.info(f"Thumbnail deleted successfully: {thumbnail_path}")
@@ -183,11 +187,14 @@ class StorageService:
                 path=storage_path.rsplit('/', 1)[0] if '/' in storage_path else ""
             )
             
-            if result.get("error"):
+            # Check if list operation was successful
+            if hasattr(result, 'error') and result.error:
                 return False
             
             filename = storage_path.rsplit('/', 1)[-1]
-            return any(item.get("name") == filename for item in result)
+            # Handle both list and data attributes
+            items = getattr(result, 'data', result) if hasattr(result, 'data') else result
+            return any(item.get("name") == filename for item in items)
             
         except Exception as e:
             logger.error(f"Failed to check file existence: {e}")

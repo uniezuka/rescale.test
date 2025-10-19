@@ -153,7 +153,7 @@ async def get_images(
         ).eq(
             'user_id', current_user.id
         ).order(
-            'created_at', desc=True
+            'uploaded_at', desc=True
         ).range(offset, offset + limit - 1).execute()
         
         if not result.data:

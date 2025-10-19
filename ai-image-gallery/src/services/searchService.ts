@@ -174,7 +174,7 @@ export class SearchService {
             description_similarity: Math.round(descSimilarity * 1000) / 1000,
             ai_tags: image.ai_tags,
             ai_description: image.ai_description,
-            created_at: image.created_at
+            uploaded_at: image.uploaded_at
           });
         }
       }

@@ -39,7 +39,7 @@ class SearchRequest(BaseModel):
     filters: SearchFilters = Field(..., description="Search filters")
     page: int = Field(1, ge=1, description="Page number")
     limit: int = Field(20, ge=1, le=100, description="Items per page")
-    sort_by: str = Field("created_at", description="Sort field")
+    sort_by: str = Field("uploaded_at", description="Sort field")
     sort_order: str = Field("desc", description="Sort order (asc/desc)")
     
     @validator('sort_order')
