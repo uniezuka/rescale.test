@@ -51,12 +51,13 @@ export class SecureImageService {
     try {
       const headers = await this.getAuthHeaders();
       
+      // Remove Content-Type header for blob requests
+      const blobHeaders = { ...headers } as Record<string, string>;
+      delete blobHeaders['Content-Type'];
+      
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          ...headers,
-          'Content-Type': undefined // Remove content-type for blob requests
-        }
+        headers: blobHeaders
       });
 
       if (!response.ok) {
