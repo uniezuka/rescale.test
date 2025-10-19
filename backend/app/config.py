@@ -32,7 +32,13 @@ class Settings(BaseSettings):
     project_name: str = "AI Image Gallery"
     
     # CORS Configuration
-    allowed_origins: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    allowed_origins: List[str] = [
+        "http://localhost:3000", 
+        "http://localhost:5173"
+    ]
+    
+    # Allow all origins in production (set via environment variable)
+    allow_all_origins: bool = False
     allowed_hosts: List[str] = ["*"]
     
     # File Upload Configuration
