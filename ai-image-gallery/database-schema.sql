@@ -31,12 +31,12 @@ CREATE INDEX IF NOT EXISTS idx_images_processing_status ON images(processing_sta
 CREATE INDEX IF NOT EXISTS idx_images_ai_tags ON images USING GIN(ai_tags);
 CREATE INDEX IF NOT EXISTS idx_images_dominant_colors ON images USING GIN(dominant_colors);
 
--- Create storage buckets
+-- Create storage buckets (PRIVATE for security)
 INSERT INTO storage.buckets (id, name, public) 
 VALUES 
-    ('images', 'images', true),
-    ('thumbnails', 'thumbnails', true)
-ON CONFLICT (id) DO NOTHING;
+    ('images', 'images', false),
+    ('thumbnails', 'thumbnails', false)
+ON CONFLICT (id) DO UPDATE SET public = false;
 
 -- Row Level Security (RLS) Policies
 ALTER TABLE images ENABLE ROW LEVEL SECURITY;
@@ -57,42 +57,48 @@ CREATE POLICY "Users can update their own images" ON images
 CREATE POLICY "Users can delete their own images" ON images
     FOR DELETE USING (auth.uid() = user_id);
 
--- Storage policies for images bucket
+-- Storage policies for images bucket (REQUIRE AUTHENTICATION)
 CREATE POLICY "Users can upload their own images" ON storage.objects
     FOR INSERT WITH CHECK (
         bucket_id = 'images' 
         AND auth.uid()::text = (storage.foldername(name))[1]
+        AND auth.role() = 'authenticated'
     );
 
 CREATE POLICY "Users can view their own images" ON storage.objects
     FOR SELECT USING (
         bucket_id = 'images' 
         AND auth.uid()::text = (storage.foldername(name))[1]
+        AND auth.role() = 'authenticated'
     );
 
 CREATE POLICY "Users can delete their own images" ON storage.objects
     FOR DELETE USING (
         bucket_id = 'images' 
         AND auth.uid()::text = (storage.foldername(name))[1]
+        AND auth.role() = 'authenticated'
     );
 
--- Storage policies for thumbnails bucket
+-- Storage policies for thumbnails bucket (REQUIRE AUTHENTICATION)
 CREATE POLICY "Users can upload their own thumbnails" ON storage.objects
     FOR INSERT WITH CHECK (
         bucket_id = 'thumbnails' 
         AND auth.uid()::text = (storage.foldername(name))[1]
+        AND auth.role() = 'authenticated'
     );
 
 CREATE POLICY "Users can view their own thumbnails" ON storage.objects
     FOR SELECT USING (
         bucket_id = 'thumbnails' 
         AND auth.uid()::text = (storage.foldername(name))[1]
+        AND auth.role() = 'authenticated'
     );
 
 CREATE POLICY "Users can delete their own thumbnails" ON storage.objects
     FOR DELETE USING (
         bucket_id = 'thumbnails' 
         AND auth.uid()::text = (storage.foldername(name))[1]
+        AND auth.role() = 'authenticated'
     );
 
 -- Function to update updated_at timestamp

@@ -9,7 +9,7 @@ from datetime import datetime
 from uuid import UUID
 from app.services.azure_vision import azure_vision_service
 from app.database import get_supabase_client
-from app.models.image import ProcessingStatus
+from app.models.image import ProcessingStatus, AIProcessingResult
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,16 @@ class SimpleAIProcessor:
             
             # Analyze image with Azure Computer Vision
             logger.info(f"Analyzing image {image_id} with Azure Computer Vision")
-            ai_result = await azure_vision_service.analyze_image(image_url)
+            
+            # Get image data from storage since URLs are now private
+            supabase = get_supabase_client()
+            image_data = await self._get_image_data_from_storage(image_id, supabase)
+            
+            # Use blob analysis instead of URL analysis
+            ai_result = await azure_vision_service.analyze_image_blob(
+                image_data['data'], 
+                image_data['content_type']
+            )
             
             # Update database with results
             logger.info(f"Updating database with AI results for image {image_id}")
@@ -122,17 +131,67 @@ class SimpleAIProcessor:
         except Exception as e:
             logger.error(f"Failed to update image status: {e}")
     
+    async def _get_image_data_from_storage(self, image_id: UUID, supabase) -> Dict[str, Any]:
+        """
+        Get image data from private storage for AI processing
+        
+        Args:
+            image_id: ID of the image
+            supabase: Supabase client
+            
+        Returns:
+            Dictionary with image data and content type
+        """
+        try:
+            # Get image record from database
+            result = supabase.table('images').select('filename, mime_type').eq('id', str(image_id)).single().execute()
+            
+            if not result.data:
+                raise Exception(f"Image {image_id} not found in database")
+            
+            image_record = result.data
+            filename = image_record['filename']
+            content_type = image_record['mime_type']
+            
+            # Download image data from private storage
+            image_data = supabase.storage.from_('images').download(filename)
+            
+            if not image_data:
+                raise Exception(f"Failed to download image {filename} from storage")
+            
+            return {
+                'data': image_data,
+                'content_type': content_type
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get image data for {image_id}: {e}")
+            raise Exception(f"Failed to get image data: {e}")
+
     async def _update_image_with_results(self, image_id: UUID, ai_result) -> None:
         """Update image with AI analysis results"""
         try:
             supabase = get_supabase_client()
-            supabase.table('images').update({
+            
+            # Debug logging
+            logger.info(f"Updating image {image_id} with results:")
+            logger.info(f"  - Tags: {ai_result.tags}")
+            logger.info(f"  - Description: {ai_result.description}")
+            logger.info(f"  - Dominant colors: {ai_result.dominant_colors}")
+            
+            update_data = {
                 'processing_status': ProcessingStatus.COMPLETED.value,
                 'ai_tags': ai_result.tags,
                 'ai_description': ai_result.description,
                 'dominant_colors': ai_result.dominant_colors,
                 'updated_at': datetime.now().isoformat()
-            }).eq('id', image_id).execute()
+            }
+            
+            logger.info(f"Database update data: {update_data}")
+            
+            result = supabase.table('images').update(update_data).eq('id', image_id).execute()
+            logger.info(f"Database update result: {result}")
+            
         except Exception as e:
             logger.error(f"Failed to update image with AI results: {e}")
     

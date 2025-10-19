@@ -1,7 +1,10 @@
+import { FallbackColorExtractionService } from './fallbackColorExtraction';
+
 export interface AzureVisionResponse {
   tags: string[];
   description: string;
   dominantColors: string[];
+  colorExtractionMethod?: 'azure' | 'fallback';
 }
 
 export interface AzureVisionErrorData {
@@ -63,8 +66,19 @@ export class AzureVisionService {
       }
 
       const data = await response.json();
+      const azureResult = this.processAzureResponse(data);
       
-      return this.processAzureResponse(data);
+      // If Azure didn't return colors, use fallback colors
+      if (azureResult.dominantColors.length === 0) {
+        console.log('Azure returned no colors for URL analysis, using fallback colors');
+        return {
+          ...azureResult,
+          dominantColors: FallbackColorExtractionService.getFallbackColors(),
+          colorExtractionMethod: 'fallback'
+        };
+      }
+      
+      return azureResult;
     } catch (error) {
       if (error instanceof AzureVisionError) {
         throw error;
@@ -112,8 +126,35 @@ export class AzureVisionService {
       }
 
       const data = await response.json();
+      const azureResult = this.processAzureResponse(data);
       
-      return this.processAzureResponse(data);
+      // If Azure didn't return colors, try fallback extraction
+      if (azureResult.dominantColors.length === 0) {
+        console.log('Azure returned no colors, attempting fallback extraction...');
+        try {
+          const fallbackColors = await FallbackColorExtractionService.extractColorsFromImage(imageBlob);
+          if (fallbackColors.length > 0) {
+            console.log('Fallback color extraction successful:', fallbackColors);
+            return {
+              ...azureResult,
+              dominantColors: fallbackColors,
+              colorExtractionMethod: 'fallback'
+            };
+          }
+        } catch (fallbackError) {
+          console.warn('Fallback color extraction failed:', fallbackError);
+        }
+        
+        // If fallback also fails, use default colors
+        console.log('Using default fallback colors');
+        return {
+          ...azureResult,
+          dominantColors: FallbackColorExtractionService.getFallbackColors(),
+          colorExtractionMethod: 'fallback'
+        };
+      }
+      
+      return azureResult;
     } catch (error) {
       if (error instanceof AzureVisionError) {
         throw error;
@@ -137,14 +178,28 @@ export class AzureVisionService {
       color?: { dominantColors?: string[] };
     };
 
+    // Enhanced logging for debugging
+    console.log('Azure API Response:', {
+      hasColor: !!responseData.color,
+      hasDominantColors: !!responseData.color?.dominantColors,
+      dominantColorsCount: responseData.color?.dominantColors?.length || 0,
+      dominantColors: responseData.color?.dominantColors
+    });
+
     const tags = responseData.tags?.map((tag) => tag.name).slice(0, 10) || [];
     const description = responseData.description?.captions?.[0]?.text || '';
     const dominantColors = responseData.color?.dominantColors || [];
 
+    // Log if no colors were extracted
+    if (dominantColors.length === 0) {
+      console.warn('No dominant colors extracted from Azure API response');
+    }
+
     return {
       tags: this.cleanTags(tags),
       description: this.cleanDescription(description),
-      dominantColors: this.formatColors(dominantColors)
+      dominantColors: this.formatColors(dominantColors),
+      colorExtractionMethod: dominantColors.length > 0 ? 'azure' : 'fallback'
     };
   }
 

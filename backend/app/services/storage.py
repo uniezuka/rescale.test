@@ -36,7 +36,7 @@ class StorageService:
             user_id: User ID for path organization
             
         Returns:
-            Tuple of (storage_path, public_url)
+            Tuple of (storage_path, api_url) - api_url is for API-based serving
         """
         try:
             # Create user-specific path
@@ -52,11 +52,12 @@ class StorageService:
             if result.get("error"):
                 raise Exception(f"Storage upload error: {result['error']}")
             
-            # Get public URL
-            public_url = self.supabase.storage.from_(self.images_bucket).get_public_url(storage_path)
+            # Since storage is now private, we'll use API-based serving
+            # Return a placeholder URL that will be handled by the API
+            api_url = f"/api/images/{user_id}/{filename}"  # This will be replaced by actual image ID
             
             logger.info(f"Image uploaded successfully: {storage_path}")
-            return storage_path, public_url
+            return storage_path, api_url
             
         except Exception as e:
             logger.error(f"Image upload failed: {e}")
@@ -72,7 +73,7 @@ class StorageService:
             user_id: User ID for path organization
             
         Returns:
-            Tuple of (thumbnail_path, public_url)
+            Tuple of (thumbnail_path, api_url) - api_url is for API-based serving
         """
         try:
             # Create thumbnail filename
@@ -90,11 +91,12 @@ class StorageService:
             if result.get("error"):
                 raise Exception(f"Thumbnail upload error: {result['error']}")
             
-            # Get public URL
-            public_url = self.supabase.storage.from_(self.thumbnails_bucket).get_public_url(thumbnail_path)
+            # Since storage is now private, we'll use API-based serving
+            # Return a placeholder URL that will be handled by the API
+            api_url = f"/api/images/{user_id}/{thumbnail_filename}"  # This will be replaced by actual image ID
             
             logger.info(f"Thumbnail uploaded successfully: {thumbnail_path}")
-            return thumbnail_path, public_url
+            return thumbnail_path, api_url
             
         except Exception as e:
             logger.error(f"Thumbnail upload failed: {e}")

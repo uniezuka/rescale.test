@@ -57,6 +57,7 @@ export class SearchService {
       // Apply color filter
       if (color) {
         const colorCode = color.startsWith('#') ? color : `#${color}`;
+        console.log('Applying color filter:', colorCode);
         searchQuery = searchQuery.contains('dominant_colors', [colorCode]);
       }
 

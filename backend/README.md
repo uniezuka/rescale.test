@@ -29,7 +29,7 @@ A simple and robust FastAPI backend for the AI Image Gallery application with Az
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.simple.txt
+pip install -r requirements.txt
 ```
 
 ### 2. Environment Configuration

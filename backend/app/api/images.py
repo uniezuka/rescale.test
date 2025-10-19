@@ -355,6 +355,134 @@ async def retry_ai_processing(
         )
 
 
+@router.get("/{image_id}/view")
+async def view_image(
+    image_id: UUID,
+    current_user: UserResponse = Depends(get_current_user)
+):
+    """
+    View an image file (inline display)
+    
+    Args:
+        image_id: ID of the image to view
+        current_user: Authenticated user
+        
+    Returns:
+        StreamingResponse with image file for inline viewing
+    """
+    try:
+        supabase = get_supabase_client()
+        
+        # Get image details
+        result = supabase.table('images').select('*').eq('id', image_id).single().execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Image not found"
+            )
+        
+        image_data = result.data
+        
+        # Check ownership
+        await require_image_ownership(current_user.id, image_data['user_id'])
+        
+        # Get file from storage
+        filename = image_data['filename']
+        file_data = supabase.storage.from_('images').download(filename)
+        
+        if not file_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Image file not found in storage"
+            )
+        
+        # Return file as streaming response for inline viewing
+        return StreamingResponse(
+            io.BytesIO(file_data),
+            media_type=image_data['mime_type'],
+            headers={
+                "Content-Disposition": f"inline; filename={image_data['original_filename']}",
+                "Cache-Control": "private, max-age=3600"  # Cache for 1 hour
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to view image {image_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to view image"
+        )
+
+
+@router.get("/{image_id}/thumbnail")
+async def get_thumbnail(
+    image_id: UUID,
+    current_user: UserResponse = Depends(get_current_user)
+):
+    """
+    Get image thumbnail
+    
+    Args:
+        image_id: ID of the image
+        current_user: Authenticated user
+        
+    Returns:
+        StreamingResponse with thumbnail image
+    """
+    try:
+        supabase = get_supabase_client()
+        
+        # Get image details
+        result = supabase.table('images').select('*').eq('id', image_id).single().execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Image not found"
+            )
+        
+        image_data = result.data
+        
+        # Check ownership
+        await require_image_ownership(current_user.id, image_data['user_id'])
+        
+        # Get thumbnail from storage
+        filename = image_data['filename']
+        # Create thumbnail filename
+        name, ext = os.path.splitext(filename)
+        thumbnail_filename = f"{name}_thumb.jpg"
+        
+        thumbnail_data = supabase.storage.from_('thumbnails').download(thumbnail_filename)
+        
+        if not thumbnail_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Thumbnail not found in storage"
+            )
+        
+        # Return thumbnail as streaming response
+        return StreamingResponse(
+            io.BytesIO(thumbnail_data),
+            media_type="image/jpeg",
+            headers={
+                "Content-Disposition": f"inline; filename=thumbnail_{image_data['original_filename']}",
+                "Cache-Control": "private, max-age=3600"  # Cache for 1 hour
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get thumbnail for image {image_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get thumbnail"
+        )
+
+
 @router.get("/{image_id}/download")
 async def download_image(
     image_id: UUID,

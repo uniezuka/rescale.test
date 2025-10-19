@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { ImageMetadata } from '../types/image';
+import { SecureImageService } from '../services/secureImageService';
 
 interface ImageModalProps {
   image: ImageMetadata | null;
@@ -20,6 +21,32 @@ export const ImageModal: React.FC<ImageModalProps> = ({
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [secureImageUrl, setSecureImageUrl] = useState<string | null>(null);
+
+  // Load secure image URL when image changes
+  useEffect(() => {
+    if (image && isOpen) {
+      const loadSecureImage = async () => {
+        try {
+          const url = await SecureImageService.createSecureImageUrl(image.id, 'view');
+          setSecureImageUrl(url);
+        } catch (error) {
+          console.error('Failed to load secure image:', error);
+          setImageError(true);
+          setImageLoaded(true);
+        }
+      };
+
+      loadSecureImage();
+    }
+
+    // Cleanup function to revoke object URL
+    return () => {
+      if (secureImageUrl) {
+        SecureImageService.revokeImageUrl(secureImageUrl);
+      }
+    };
+  }, [image?.id, isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -84,11 +111,12 @@ export const ImageModal: React.FC<ImageModalProps> = ({
   };
 
   const downloadImage = async () => {
-    if (!image || !image.original_url) return;
+    if (!image) return;
 
     try {
-      const response = await fetch(image.original_url);
-      const blob = await response.blob();
+      // Use secure download URL
+      const downloadUrl = SecureImageService.getSecureImageDownloadUrl(image.id);
+      const blob = await SecureImageService.fetchImageBlob(downloadUrl);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -166,16 +194,18 @@ export const ImageModal: React.FC<ImageModalProps> = ({
                   <p className="text-gray-500">Failed to load image</p>
                 </div>
               ) : (
-                <img
-                  src={image.original_url}
-                  alt={image.original_filename}
-                  className={`
-                    max-w-full max-h-full object-contain transition-opacity duration-200
-                    ${imageLoaded ? 'opacity-100' : 'opacity-0'}
-                  `}
-                  onLoad={() => setImageLoaded(true)}
-                  onError={() => setImageError(true)}
-                />
+                secureImageUrl && (
+                  <img
+                    src={secureImageUrl}
+                    alt={image.original_filename}
+                    className={`
+                      max-w-full max-h-full object-contain transition-opacity duration-200
+                      ${imageLoaded ? 'opacity-100' : 'opacity-0'}
+                    `}
+                    onLoad={() => setImageLoaded(true)}
+                    onError={() => setImageError(true)}
+                  />
+                )
               )}
             </div>
 

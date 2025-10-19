@@ -66,7 +66,10 @@ async def search_images(
         if color:
             if not color.startswith('#'):
                 color = f"#{color}"
+            logger.info(f"Applying color filter: {color}")
+            # Use contains instead of overlaps for array contains operation
             query = query.contains('dominant_colors', [color])
+            logger.info(f"Color filter query applied")
         
         # Apply tag filter
         if tags:
@@ -85,9 +88,12 @@ async def search_images(
         query = query.range(offset, offset + limit - 1)
         
         # Execute query
+        logger.info(f"Executing search query with filters - q: {q}, color: {color}, tags: {tags}")
         result = query.execute()
+        logger.info(f"Query executed, found {len(result.data) if result.data else 0} results")
         
         if not result.data:
+            logger.info("No results found for search query")
             return SearchResponse(
                 images=[],
                 total=0,

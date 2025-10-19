@@ -17,7 +17,7 @@ class AzureVisionService:
     """Service for Azure Computer Vision API integration"""
     
     def __init__(self):
-        self.endpoint = settings.azure_vision_endpoint
+        self.endpoint = settings.azure_vision_endpoint.rstrip('/')
         self.api_key = settings.azure_vision_key
         self.base_url = f"{self.endpoint}/vision/v3.2"
         
@@ -160,6 +160,10 @@ class AzureVisionService:
         Returns:
             Processed AIProcessingResult
         """
+        # Enhanced logging for debugging
+        logger.info(f"Azure API Response - Has color: {'color' in data}, "
+                   f"Has dominantColors: {'dominantColors' in data.get('color', {})}, "
+                   f"Colors count: {len(data.get('color', {}).get('dominantColors', []))}")
         # Extract tags
         tags = []
         if "tags" in data:
@@ -180,6 +184,11 @@ class AzureVisionService:
         dominant_colors = []
         if "color" in data and "dominantColors" in data["color"]:
             dominant_colors = data["color"]["dominantColors"][:5]  # Limit to 5 colors
+            logger.info(f"Raw dominant colors from Azure: {dominant_colors}")
+        
+        # Log if no colors were extracted
+        if not dominant_colors:
+            logger.warning("No dominant colors extracted from Azure API response")
         
         # Extract confidence scores
         confidence_scores = {}
@@ -213,13 +222,79 @@ class AzureVisionService:
     def _format_colors(self, colors: List[str]) -> List[str]:
         """Format color codes"""
         formatted_colors = []
-        for color in colors:
-            if color and len(color) == 6:
-                formatted_colors.append(f"#{color.upper()}")
-            elif color and color.startswith("#"):
-                formatted_colors.append(color.upper())
+        logger.info(f"Formatting colors: {colors}")
         
+        for color in colors:
+            if not color:
+                continue
+                
+            # Remove any whitespace
+            color = color.strip()
+            
+            # Handle different formats Azure might return
+            if color.startswith("#"):
+                # Already has #, just uppercase it
+                formatted_colors.append(color.upper())
+            elif len(color) == 6 and all(c in "0123456789ABCDEFabcdef" for c in color):
+                # 6 character hex without #
+                formatted_colors.append(f"#{color.upper()}")
+            elif len(color) == 3 and all(c in "0123456789ABCDEFabcdef" for c in color):
+                # 3 character hex without #, expand to 6
+                expanded = f"{color[0]}{color[0]}{color[1]}{color[1]}{color[2]}{color[2]}"
+                formatted_colors.append(f"#{expanded.upper()}")
+            else:
+                # Try to convert color name to hex
+                hex_color = self._color_name_to_hex(color)
+                if hex_color:
+                    formatted_colors.append(hex_color)
+                else:
+                    logger.warning(f"Invalid color format: {color}")
+        
+        logger.info(f"Formatted colors: {formatted_colors}")
         return formatted_colors[:5]  # Limit to 5 colors
+    
+    def _color_name_to_hex(self, color_name: str) -> str:
+        """Convert color name to hex code"""
+        color_map = {
+            'white': '#FFFFFF',
+            'black': '#000000',
+            'red': '#FF0000',
+            'green': '#00FF00',
+            'blue': '#0000FF',
+            'yellow': '#FFFF00',
+            'cyan': '#00FFFF',
+            'magenta': '#FF00FF',
+            'orange': '#FFA500',
+            'purple': '#800080',
+            'pink': '#FFC0CB',
+            'brown': '#A52A2A',
+            'gray': '#808080',
+            'grey': '#808080',
+            'silver': '#C0C0C0',
+            'gold': '#FFD700',
+            'navy': '#000080',
+            'maroon': '#800000',
+            'olive': '#808000',
+            'lime': '#00FF00',
+            'aqua': '#00FFFF',
+            'teal': '#008080',
+            'fuchsia': '#FF00FF',
+            'lime': '#00FF00',
+            'indigo': '#4B0082',
+            'violet': '#EE82EE',
+            'coral': '#FF7F50',
+            'salmon': '#FA8072',
+            'turquoise': '#40E0D0',
+            'beige': '#F5F5DC',
+            'ivory': '#FFFFF0',
+            'khaki': '#F0E68C',
+            'lavender': '#E6E6FA',
+            'plum': '#DDA0DD',
+            'tan': '#D2B48C',
+            'wheat': '#F5DEB3'
+        }
+        
+        return color_map.get(color_name.lower())
     
     async def test_connection(self) -> bool:
         """

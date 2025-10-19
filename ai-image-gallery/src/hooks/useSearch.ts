@@ -53,7 +53,7 @@ export const useSearch = (options: UseSearchOptions = {}): UseSearchReturn => {
 
   // Check if there are active filters
   const hasActiveFilters = useCallback(() => {
-    return Boolean(
+    const hasActive = Boolean(
       (filters.tags && filters.tags.length > 0) ||
       (filters.colors && filters.colors.length > 0) ||
       filters.dateFrom ||
@@ -61,6 +61,7 @@ export const useSearch = (options: UseSearchOptions = {}): UseSearchReturn => {
       filters.fileSizeMin ||
       filters.fileSizeMax
     );
+    return hasActive;
   }, [filters]);
 
   // Check if there's an active search
@@ -73,8 +74,19 @@ export const useSearch = (options: UseSearchOptions = {}): UseSearchReturn => {
     const finalQuery = searchQuery !== undefined ? searchQuery : query;
     const finalFilters = searchFilters !== undefined ? searchFilters : filters;
 
+    // Check if there are active filters using the finalFilters (not stale state)
+    const hasActiveFiltersNow = Boolean(
+      (finalFilters.tags && finalFilters.tags.length > 0) ||
+      (finalFilters.colors && finalFilters.colors.length > 0) ||
+      finalFilters.dateFrom ||
+      finalFilters.dateTo ||
+      finalFilters.fileSizeMin ||
+      finalFilters.fileSizeMax
+    );
+
+
     // Don't search if no query and no filters
-    if (!finalQuery.trim() && !hasActiveFilters()) {
+    if (!finalQuery.trim() && !hasActiveFiltersNow) {
       setResults(null);
       return;
     }
@@ -85,7 +97,7 @@ export const useSearch = (options: UseSearchOptions = {}): UseSearchReturn => {
 
       const searchOptions = {
         query: finalQuery.trim() || undefined,
-        color: finalFilters.colors?.[0], // Use first color for now
+        color: finalFilters.colors?.[0], // Use first color for now - TODO: support multiple colors
         tags: finalFilters.tags,
         page: 1,
         limit: pageSize,

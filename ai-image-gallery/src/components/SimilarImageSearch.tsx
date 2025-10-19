@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SearchService } from '../services/searchService';
 import { Button } from './Button';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -36,7 +36,7 @@ export const SimilarImageSearch: React.FC<SimilarImageSearchProps> = ({
   const [similarityThreshold, setSimilarityThreshold] = useState(0.7);
   const [maxResults, setMaxResults] = useState(10);
 
-  const findSimilarImages = async () => {
+  const findSimilarImages = useCallback(async () => {
     if (!sourceImage.id) return;
 
     try {
@@ -57,7 +57,14 @@ export const SimilarImageSearch: React.FC<SimilarImageSearchProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [sourceImage.id, maxResults, similarityThreshold]);
+
+  // Automatically search for similar images when component mounts
+  useEffect(() => {
+    if (sourceImage.id) {
+      findSimilarImages();
+    }
+  }, [sourceImage.id, findSimilarImages]);
 
   const handleImageClick = (similarImage: SimilarImage) => {
     // Convert similar image to ImageMetadata format
