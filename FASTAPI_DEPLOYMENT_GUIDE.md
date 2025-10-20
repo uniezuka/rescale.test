@@ -2,7 +2,7 @@
 
 ## 🚀 **Deployment Options**
 
-This guide covers multiple deployment options for the FastAPI backend, from local development to production cloud deployments.
+This guide covers multiple deployment options for the FastAPI backend, with **Render** as the primary production deployment platform.
 
 ## 📋 **Prerequisites**
 
@@ -55,96 +55,87 @@ docker-compose up --scale celery=3
 docker-compose up --scale api=2
 ```
 
-## ☁️ **Option 2: Cloud Deployment**
+## ☁️ **Option 2: Render Deployment (Primary Production)**
 
-### Railway Deployment
+### Render Deployment Steps
 
-Railway provides easy deployment with automatic scaling:
-
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Login to Railway
-railway login
-
-# Initialize project
-railway init
-
-# Set environment variables
-railway variables set SUPABASE_URL=your_supabase_url
-railway variables set AZURE_VISION_ENDPOINT=your_azure_endpoint
-railway variables set AZURE_VISION_KEY=your_azure_key
-railway variables set REDIS_URL=your_redis_url
-
-# Deploy
-railway up
-```
-
-### Render Deployment
+Render provides easy deployment with automatic scaling and zero-configuration:
 
 1. **Connect Repository**
-   - Link your GitHub repository
-   - Select the backend directory
+   - Link your GitHub repository to Render
+   - Select the backend directory as the root
 
 2. **Configure Service**
    ```yaml
-   # render.yaml
+   # render.yaml (optional)
    services:
      - type: web
        name: ai-image-gallery-api
        env: python
        buildCommand: pip install -r requirements.txt
-       startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+       startCommand: python -m app.main
        envVars:
          - key: SUPABASE_URL
-           value: your_supabase_url
+           sync: false
          - key: AZURE_VISION_ENDPOINT
-           value: your_azure_endpoint
+           sync: false
          - key: AZURE_VISION_KEY
-           value: your_azure_key
-         - key: REDIS_URL
-           value: your_redis_url
+           sync: false
    ```
 
-3. **Deploy**
-   - Render automatically deploys on git push
-   - Monitor deployment in dashboard
-
-### DigitalOcean App Platform
-
-1. **Create App**
-   - Choose "Container Registry"
-   - Connect GitHub repository
-
-2. **Configure Components**
-   ```yaml
-   # .do/app.yaml
-   name: ai-image-gallery
-   services:
-     - name: api
-       source_dir: backend
-       github:
-         repo: your-username/ai-image-gallery
-         branch: main
-       run_command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-       environment_slug: python
-       instance_count: 2
-       instance_size_slug: basic-xxs
-       envs:
-         - key: SUPABASE_URL
-           value: ${SUPABASE_URL}
-         - key: AZURE_VISION_ENDPOINT
-           value: ${AZURE_VISION_ENDPOINT}
-         - key: AZURE_VISION_KEY
-           value: ${AZURE_VISION_KEY}
-         - key: REDIS_URL
-           value: ${REDIS_URL}
+3. **Set Environment Variables**
+   In your Render dashboard, add these environment variables:
+   ```env
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_ANON_KEY=your_supabase_anon_key
+   AZURE_VISION_ENDPOINT=your_azure_endpoint
+   AZURE_VISION_KEY=your_azure_key
+   REDIS_URL=your_redis_url
    ```
 
-3. **Add Redis Database**
-   - Create managed Redis database
-   - Configure connection string
+4. **Deploy**
+   - Render will automatically build and deploy your FastAPI application
+   - Access your API at: `https://your-service-name.onrender.com`
+
+### Render Service Configuration
+
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `python -m app.main`
+- **Python Version**: 3.8+
+- **Auto-deploy**: Enabled on git push
+- **Health Check**: `/api/v1/health`
+
+## 🐳 **Option 3: Docker Deployment (Local Development)**
+
+### Local Docker Development
+
+```bash
+# Clone and navigate to backend
+cd backend
+
+# Build and start all services
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+### Docker Compose Services
+
+The `docker-compose.yml` includes:
+- **API**: FastAPI application
+- **Celery**: Background worker
+- **Flower**: Celery monitoring dashboard
+- **Redis**: Message broker and cache
+
+### Access Points
+- **API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+- **Flower Dashboard**: http://localhost:5555
+- **Health Check**: http://localhost:8000/api/v1/health
 
 ### AWS Deployment
 

@@ -216,15 +216,33 @@ The project is fully typed with TypeScript. Make sure to add proper types for ne
 
 ## Deployment
 
-### Vercel (Recommended)
+### Render (Primary Production Platform)
 
-1. Connect your GitHub repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
+1. **Connect Repository**
+   - Link your GitHub repository to Render
+   - Select the `ai-image-gallery` directory as the root
+
+2. **Configure Service**
+   - **Build Command**: `npm install && npm run build`
+   - **Publish Directory**: `dist`
+   - **Node Version**: 18+
+
+3. **Set Environment Variables**
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_AZURE_CV_ENDPOINT=your_azure_endpoint
+   VITE_AZURE_CV_KEY=your_azure_key
+   VITE_API_BASE_URL=https://your-backend-service.onrender.com/api/v1
+   ```
+
+4. **Deploy**
+   - Render will automatically build and deploy your React application
+   - Access your app at: `https://your-service-name.onrender.com`
 
 ### Other Platforms
 
-The project builds to static files in the `dist` directory, so it can be deployed to any static hosting service.
+The project builds to static files in the `dist` directory, so it can be deployed to any static hosting service like Vercel, Netlify, or AWS S3.
 
 ## Contributing
 

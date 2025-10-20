@@ -283,15 +283,15 @@ All tables use Row Level Security (RLS) to ensure data isolation between users.
 
 ## 🚀 Deployment
 
-### Frontend (Vercel)
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
+### Frontend (Render)
+1. Connect your GitHub repository to Render
+2. Set environment variables in Render dashboard
 3. Deploy automatically on push to main branch
 
-### Backend (Supabase)
+### Backend (Render)
 1. Create Supabase project
 2. Run database migrations
-3. Start FastAPI Backend
+3. Deploy FastAPI Backend to Render
 4. Configure storage buckets
 
 ### Environment Variables
@@ -303,6 +303,9 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 # Azure Computer Vision
 AZURE_VISION_ENDPOINT=your_azure_endpoint
 AZURE_VISION_KEY=your_azure_key
+
+# Render Backend API
+VITE_API_BASE_URL=https://your-backend-service.onrender.com/api/v1
 
 # Production
 NODE_ENV=production

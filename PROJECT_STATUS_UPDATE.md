@@ -178,7 +178,7 @@ Database Schema:
 ├── Cleanup triggers         ✅ Complete
 └── AI metadata fields       ✅ Complete
 
-FastAPI Backend:
+FastAPI Backend (Render):
 ├── Image processing         ✅ Complete
 ├── Background jobs          ✅ Complete
 ├── AI analysis              ✅ Complete

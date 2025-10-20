@@ -458,17 +458,22 @@ Local Machine
 
 ### Production Environment
 ```
-Vercel (Frontend)
+Render (Frontend)
 ├── Static Site Generation
-├── Edge Functions (if needed)
-└── CDN Distribution
+├── CDN Distribution
+└── Automatic Deployments
 
-Supabase (Backend)
+Render (Backend API)
+├── FastAPI Application
+├── Background Processing
+└── Auto-scaling
+
+Supabase (Backend Services)
 ├── PostgreSQL Database
 ├── Authentication Service
 ├── Storage Service
-├── Edge Functions
-└── Real-time Subscriptions
+├── Real-time Subscriptions
+└── Row Level Security
 
 Azure (AI Services)
 ├── Computer Vision API
